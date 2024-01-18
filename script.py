@@ -38,7 +38,7 @@ def parse_arguments(dock_image):
         options.func(dock_image)
 
 
-def check_exists_image(dock_image):
+def check_image_exists(dock_image):
     try:
         client.images.get(dock_image)
         return True
@@ -46,7 +46,7 @@ def check_exists_image(dock_image):
         return False
 
 
-def is_containers_active(dock_image):
+def check_containers_active(dock_image):
     containers = client.containers.list(all=True)
 
     if not containers:
@@ -67,32 +67,35 @@ def show_image(dock_image):
     print(f"Image name: {dock_image}")
     print(f"Image ID: {image_show.short_id}")
     print(f"Created: {image_show.attrs['Created']}")
-    is_containers_active(dock_image)
+    check_containers_active(dock_image)
 
 
 def delete_image(dock_image):
     try:
         client.images.remove(dock_image)
-        print_message(f"{dock_image} ha sido borrado")
+        print_message(f"{dock_image} successfully deleted")
     except docker.errors.ImageNotFound:
         print_message("There is no image to delete")
 
 
 def create_image(dock_image, force=False):
-    if check_exists_image(dock_image):
-        if force:
-            subprocess.run(f'docker build --no-cache -t {dock_image} .', shell=True)
-            print_message(f"The image {dock_image} recreated")
-            show_image(dock_image)
-            return
+    try:
+        if check_image_exists(dock_image):
+            if force:
+                subprocess.run(f'docker build --no-cache -t {dock_image} .', shell=True)
+                print_message(f"The image {dock_image} recreated")
+            else:
+                print_message(f"The image {dock_image} already exists")
 
-        print_message(f"The image {dock_image} already exists")
+        else:
+            subprocess.run(f'docker build -t {dock_image} .', shell=True)
+            print_message(f"The image {dock_image} created")
+
         show_image(dock_image)
-        return
+    except Exception as e:
+        print(f"Error creating image {dock_image}: {e}")
 
-    subprocess.run(f'docker build -t {dock_image} .', shell=True)
-    print_message(f"The image {dock_image} created")
-    show_image(dock_image)
+
 
 
 def main():
