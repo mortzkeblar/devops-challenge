@@ -1,6 +1,6 @@
 # devops-challenge
 
-Este proyecto contiene un micro servicio hecho en [flask](https://flask.palletsprojects.com/en/3.0.x/), la cual se ayuda de un script en python usando el [Docker SDK](https://docker-py.readthedocs.io/en/stable/) para python. 
+Este proyecto contiene un micro servicio hecho en [flask](https://flask.palletsprojects.com/en/3.0.x/), la cual se ayuda de un script en python usando el modulo [Docker SDK](https://docker-py.readthedocs.io/en/stable/). 
 
 ## Enunciado
 Deberás crear un script en Python que cree una imagen de Docker que
@@ -19,6 +19,9 @@ contenga un micro servicio con las siguientes funcionalidades:
 ```
 
 ## Rutas definidas
+> Es recomendable el uso de Postman para probar las distintas rutas
+
+
 ``` bash
 http://localhost:5555                    # GET, te duvuelve un html donde cargar la imagen 
                                          # POST, te permite cargar un archivo 
