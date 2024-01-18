@@ -54,7 +54,7 @@ def check_containers_active(dock_image):
         return
 
     for container in containers:
-        print(container.attrs['Config']['Image'])
+        #print(container.attrs['Config']['Image'])
         if dock_image == container.attrs['Config']['Image']:
             if container.status == "running":
                 print(f"Container status: running")
@@ -83,9 +83,9 @@ def create_image(dock_image, force=False):
         if check_image_exists(dock_image):
             if force:
                 subprocess.run(f'docker build --no-cache -t {dock_image} .', shell=True)
-                print_message(f"The image {dock_image} recreated")
+                print_message(f"{dock_image} recreated")
             else:
-                print_message(f"The image {dock_image} already exists")
+                print_message(f"{dock_image} already exists")
 
         else:
             subprocess.run(f'docker build -t {dock_image} .', shell=True)

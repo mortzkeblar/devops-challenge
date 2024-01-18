@@ -5,9 +5,13 @@ WORKDIR /src
 RUN apk add build-base
 
 COPY requirements.txt requirements.txt
+RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
 
 COPY . .
-CMD [ "python3", "-m", "flask", "run", "--host=0.0.0.0" ]
+
+EXPOSE 5555
+
+CMD [ "gunicorn", "-w", "4", "-b", "0.0.0.0:5555", "--chdir", "src/", "app:app" ]
 
 
