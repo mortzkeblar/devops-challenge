@@ -3,21 +3,42 @@
 import subprocess
 import docker
 import argparse
+import sys
+
+IMAGE_NAME = "devops-challenge"
+IMAGE_TAG = "latest"
+
+client = docker.from_env()
 
 
 def print_message(message):
-    print(f"{'=' * 40}\n{message}\n{'=' * 40}")
+    print(f"{'=' * 60}\n{message}\n{'=' * 60}")
 
 
-def parse_arguments():
+def parse_arguments(dock_image):
     parser = argparse.ArgumentParser(description="Script for managing the file upload/download microservice")
-    parser.add_argument("-fi", "--forceimage", action="store_true", help="Forzar la construcción de la imagen")
-    parser.add_argument("-rmi", "--rmimage", action="store_true", help="Mostrar información de la imagen")
-    return parser.parse_args()
+    subparsers = parser.add_subparsers()
+
+    parser_build = subparsers.add_parser("build", help="Builds a Docker image from current directory. I can use "
+                                                       "--force to force image build without cache save")
+    parser_build.add_argument("--force", action="store_true", help="Force build image with --no-cache option")
+    parser_build.set_defaults(func=create_image)
+    parser_remove = subparsers.add_parser("remove", help="Delete the image if there is an existing image already "
+                                                         "constructed")
+    parser_remove.set_defaults(func=delete_image)
+
+    if len(sys.argv) <= 1:
+        sys.argv.append("--help")
+
+    options = parser.parse_args()
+
+    if hasattr(options, 'force'):
+        options.func(dock_image, options.force)
+    else:
+        options.func(dock_image)
 
 
 def check_exists_image(dock_image):
-    client = docker.from_env()
     try:
         client.images.get(dock_image)
         return True
@@ -26,7 +47,6 @@ def check_exists_image(dock_image):
 
 
 def is_containers_active(dock_image):
-    client = docker.from_env()
     containers = client.containers.list(all=True)
 
     if not containers:
@@ -43,7 +63,6 @@ def is_containers_active(dock_image):
 
 
 def show_image(dock_image):
-    client = docker.from_env()
     image_show = client.images.get(dock_image)
     print(f"Image name: {dock_image}")
     print(f"Image ID: {image_show.short_id}")
@@ -52,12 +71,14 @@ def show_image(dock_image):
 
 
 def delete_image(dock_image):
-    client = docker.from_env()
-    client.images.remove(dock_image)
-    print_message(f"{dock_image} ha sido borrado")
+    try:
+        client.images.remove(dock_image)
+        print_message(f"{dock_image} ha sido borrado")
+    except docker.errors.ImageNotFound:
+        print_message("There is no image to delete")
 
 
-def create_image(dock_image, force):
+def create_image(dock_image, force=False):
     if check_exists_image(dock_image):
         if force:
             subprocess.run(f'docker build --no-cache -t {dock_image} .', shell=True)
@@ -75,17 +96,8 @@ def create_image(dock_image, force):
 
 
 def main():
-    image_name = "devops-challenge"
-    image_tag = "latest"
-    image = image_name + ":" + image_tag
-
-    args = parse_arguments()
-    if args.rmimage:
-        delete_image(image)
-        return
-
-    create_image(image, args.forceimage)
-    # is_containers_active(image_name)
+    image = f"{IMAGE_NAME}:{IMAGE_TAG}"
+    parse_arguments(image)
 
 
 if __name__ == "__main__":
